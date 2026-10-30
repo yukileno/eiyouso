@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>食べて元気に｜栄養素＆調理アプリ</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand" onclick="switchMainTab('rush')" role="button" tabindex="0">
+        <span class="brand-icon">🥗</span>
+        <h1 class="brand-title">食べて元気に</h1>
+      </div>
+
+      <nav class="main-nav">
+        <button class="nav-tab active" data-tab="rush" onclick="switchMainTab('rush')">⚡ 食品×栄養素ラッシュ</button>
+        <button class="nav-tab" data-tab="cooking" onclick="switchMainTab('cooking')">🍲 ご飯とみそしる</button>
+        <button class="nav-tab" data-tab="nutrition" onclick="switchMainTab('nutrition')">📊 ５大栄養素図解</button>
+        <button class="nav-tab" data-tab="quiz" onclick="switchMainTab('quiz')">🏆 総合クイズ</button>
+      </nav>
+
+      <div class="header-status">
+        <div class="star-counter">
+          <span>⭐</span>
+          <span id="totalStars">0</span>
+        </div>
+        <button class="sound-btn" id="soundToggleBtn" onclick="toggleSound()" aria-label="サウンド切替">🔊</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <!-- ==================== ⚡ 食品×栄養素 ひたすらクイズ（メイン） ==================== -->
+    <section id="tab-rush" class="tab-panel active">
+      <div class="rush-board">
+        <!-- モード＆スコアバー -->
+        <div class="rush-top-bar">
+          <div class="rush-mode-switch">
+            <button class="mode-pill active" id="modeBtn-5nutri" onclick="setRushMode('5nutri')">
+              ５大栄養素で答える
+            </button>
+            <button class="mode-pill" id="modeBtn-3group" onclick="setRushMode('3group')">
+              ３つの働きで答える
+            </button>
+          </div>
+
+          <div class="rush-stats">
+            <span class="rush-stat-chip">🔥 連続 <strong id="rushStreak">0</strong></span>
+            <span class="rush-stat-chip">👑 最高 <strong id="rushBest">0</strong></span>
+            <span class="rush-stat-chip">⭕ 正解 <strong id="rushTotal">0</strong></span>
+          </div>
+        </div>
+
+        <!-- 出題カード -->
+        <div class="rush-stage" id="rushStage">
+          <div class="rush-food-emoji" id="rushFoodEmoji">🍚</div>
+          <div class="rush-food-name" id="rushFoodName">ご飯（米）</div>
+          <div class="rush-feedback-badge hidden" id="rushFeedbackBadge"></div>
+        </div>
+
+        <!-- 5大栄養素ボタン（5nutriモード時） -->
+        <div class="rush-answers-5" id="rushAnswers5">
+          <button class="rush-btn btn-carb" onclick="answerRush('炭水化物')">
+            <span class="rush-key">1</span>
+            <span class="rush-btn-icon">🍚</span>
+            <strong>炭水化物</strong>
+            <span class="rush-role-dot dot-yellow">エネルギー</span>
+          </button>
+          <button class="rush-btn btn-lipid" onclick="answerRush('脂質')">
+            <span class="rush-key">2</span>
+            <span class="rush-btn-icon">🧈</span>
+            <strong>脂質</strong>
+            <span class="rush-role-dot dot-yellow">エネルギー</span>
+          </button>
+          <button class="rush-btn btn-protein" onclick="answerRush('たんぱく質')">
+            <span class="rush-key">3</span>
+            <span class="rush-btn-icon">🥩</span>
+            <strong>たんぱく質</strong>
+            <span class="rush-role-dot dot-red">体をつくる</span>
+          </button>
+          <button class="rush-btn btn-mineral" onclick="answerRush('無機質')">
+            <span class="rush-key">4</span>
+            <span class="rush-btn-icon">🦴</span>
+            <strong>無機質</strong>
+            <span class="rush-role-dot dot-redgreen">骨や歯・調子</span>
+          </button>
+          <button class="rush-btn btn-vitamin" onclick="answerRush('ビタミン')">
+            <span class="rush-key">5</span>
+            <span class="rush-btn-icon">🥦</span>
+            <strong>ビタミン</strong>
+            <span class="rush-role-dot dot-green">調子を整える</span>
+          </button>
+        </div>
+
+        <!-- 3つのグループボタン（3groupモード時） -->
+        <div class="rush-answers-3 hidden" id="rushAnswers3">
+          <button class="rush-btn btn-carb" onclick="answerRush('energy')">
+            <span class="rush-key">1</span>
+            <span class="rush-btn-icon">🟡</span>
+            <strong>主にエネルギーのもと</strong>
+            <span class="rush-role-dot dot-yellow">炭水化物・脂質</span>
+          </button>
+          <button class="rush-btn btn-protein" onclick="answerRush('body')">
+            <span class="rush-key">2</span>
+            <span class="rush-btn-icon">🔴</span>
+            <strong>主に体をつくるもと</strong>
+            <span class="rush-role-dot dot-red">たんぱく質・無機質(カルシウム)</span>
+          </button>
+          <button class="rush-btn btn-vitamin" onclick="answerRush('condition')">
+            <span class="rush-key">3</span>
+            <span class="rush-btn-icon">🟢</span>
+            <strong>主に体の調子を整えるもと</strong>
+            <span class="rush-role-dot dot-green">ビタミン・無機質</span>
+          </button>
+        </div>
+
+        <!-- 直近の履歴バー -->
+        <div class="rush-history-bar" id="rushHistoryBar"></div>
+      </div>
+    </section>
+
+    <!-- ==================== 🍲 ① ご飯とみそしる ==================== -->
+    <section id="tab-cooking" class="tab-panel">
+      <div class="sub-nav">
+        <button class="sub-tab active" data-sub="cook-rice" onclick="switchCookSub('cook-rice')">🍚 ご飯をたく</button>
+        <button class="sub-tab" data-sub="cook-miso" onclick="switchCookSub('cook-miso')">🍲 みそしるを作る</button>
+        <button class="sub-tab" data-sub="cook-manner" onclick="switchCookSub('cook-manner')">🥢 配膳・米・みそ・だし</button>
+      </div>
+
+      <div id="cook-rice" class="sub-panel active">
+        <div class="step-progress" id="riceStepBar">
+          <button class="step-dot active" onclick="goToRiceStep(1)">① 計量・洗う</button>
+          <button class="step-dot" onclick="goToRiceStep(2)">② 水・吸水</button>
+          <button class="step-dot" onclick="goToRiceStep(3)">③ 火加減・蒸らす</button>
+          <button class="step-dot" onclick="goToRiceStep(4)">④ ほぐす・完成</button>
+        </div>
+        <div class="cooking-stage" id="riceStageContainer"></div>
+      </div>
+
+      <div id="cook-miso" class="sub-panel">
+        <div class="step-progress" id="misoStepBar">
+          <button class="step-dot active" onclick="goToMisoStep(1)">① だし準備</button>
+          <button class="step-dot" onclick="goToMisoStep(2)">② 実を切る</button>
+          <button class="step-dot" onclick="goToMisoStep(3)">③ だし・煮る</button>
+          <button class="step-dot" onclick="goToMisoStep(4)">④ みそ・完成</button>
+        </div>
+        <div class="cooking-stage" id="misoStageContainer"></div>
+      </div>
+
+      <div id="cook-manner" class="sub-panel">
+        <div class="two-col-grid">
+          <div class="card-box">
+            <div class="section-head">
+              <h3>🍽️ 配膳</h3>
+              <button class="primary-btn btn-sm" onclick="checkHaizen()">判定</button>
+            </div>
+            <div class="tray-simulator">
+              <div class="tray-top-row">
+                <button class="tray-slot" id="slot-left" onclick="cycleHaizenSlot('left')">
+                  <span class="slot-pos">左</span>
+                  <div class="slot-preview" id="preview-left">❓</div>
+                  <div class="slot-name" id="name-left">タップ</div>
+                </button>
+                <button class="tray-slot" id="slot-right" onclick="cycleHaizenSlot('right')">
+                  <span class="slot-pos">右</span>
+                  <div class="slot-preview" id="preview-right">❓</div>
+                  <div class="slot-name" id="name-right">タップ</div>
+                </button>
+              </div>
+              <button class="tray-slot slot-front" id="slot-front" onclick="cycleHaizenSlot('front')">
+                <span class="slot-pos">手前</span>
+                <div class="slot-preview" id="preview-front">❓</div>
+                <div class="slot-name" id="name-front">タップ</div>
+              </button>
+            </div>
+            <div id="haizenFeedback" class="feedback-box hidden"></div>
+          </div>
+
+          <div class="card-box">
+            <div class="section-head">
+              <h3>🌾 稲からご飯になるまで</h3>
+              <button class="secondary-btn btn-sm" onclick="initRiceJourney()">↺</button>
+            </div>
+            <div class="rice-journey-slots" id="riceJourneySlots"></div>
+            <div class="rice-journey-choices" id="riceJourneyChoices"></div>
+            <div id="journeyFeedback" class="feedback-box hidden"></div>
+          </div>
+        </div>
+
+        <div class="two-col-grid">
+          <div class="card-box">
+            <h3>🥣 みその種類</h3>
+            <div class="miso-compare-grid">
+              <div class="miso-tile tile-barley">
+                <div class="miso-circle">🟡</div>
+                <strong>麦みそ</strong>
+                <div class="miso-formula">大豆 ＋ 麦こうじ ＋ 塩</div>
+                <span class="miso-place">鹿児島県など</span>
+              </div>
+              <div class="miso-tile tile-rice">
+                <div class="miso-circle">🟠</div>
+                <strong>米みそ</strong>
+                <div class="miso-formula">大豆 ＋ 米こうじ ＋ 塩</div>
+                <span class="miso-place">長野県など</span>
+              </div>
+              <div class="miso-tile tile-bean">
+                <div class="miso-circle">🟤</div>
+                <strong>豆みそ</strong>
+                <div class="miso-formula">大豆 ＋ 豆こうじ ＋ 塩</div>
+                <span class="miso-place">愛知県など</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-box">
+            <h3>🐟 だし</h3>
+            <div class="dashi-grid">
+              <button class="dashi-item active" id="dashiBtn-niboshi" onclick="showDashiDetail('niboshi')">🐟 煮干し</button>
+              <button class="dashi-item" id="dashiBtn-konbu" onclick="showDashiDetail('konbu')">🌿 こんぶ</button>
+              <button class="dashi-item" id="dashiBtn-katsuo" onclick="showDashiDetail('katsuo')">🪵 かつおぶし</button>
+              <button class="dashi-item" id="dashiBtn-shiitake" onclick="showDashiDetail('shiitake')">🍄 干ししいたけ</button>
+            </div>
+            <div id="dashiDetailBox" class="dashi-detail-box"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 📊 ② ５大栄養素図解 ==================== -->
+    <section id="tab-nutrition" class="tab-panel">
+      <div class="sub-nav">
+        <button class="sub-tab active" data-sub="nutri-five" onclick="switchNutriSub('nutri-five')">💪 ５大栄養素の働き</button>
+        <button class="sub-tab" data-sub="nutri-menu" onclick="switchNutriSub('nutri-menu')">🍱 給食・献立バランス</button>
+      </div>
+
+      <div id="nutri-five" class="sub-panel active">
+        <div class="five-nutrients-diagram">
+          <div class="nutrient-buttons-row">
+            <button class="nutri-node group-yellow active" data-nutri="carb" onclick="selectNutrient('carb')">
+              <span class="nutri-icon">🍚</span>
+              <strong>炭水化物</strong>
+            </button>
+            <button class="nutri-node group-yellow" data-nutri="lipid" onclick="selectNutrient('lipid')">
+              <span class="nutri-icon">🧈</span>
+              <strong>脂質</strong>
+            </button>
+            <button class="nutri-node group-red" data-nutri="protein" onclick="selectNutrient('protein')">
+              <span class="nutri-icon">🥩</span>
+              <strong>たんぱく質*</strong>
+            </button>
+            <button class="nutri-node group-red-green" data-nutri="mineral" onclick="selectNutrient('mineral')">
+              <span class="nutri-icon">🦴</span>
+              <strong>無機質</strong>
+            </button>
+            <button class="nutri-node group-green" data-nutri="vitamin" onclick="selectNutrient('vitamin')">
+              <span class="nutri-icon">🥦</span>
+              <strong>ビタミン</strong>
+            </button>
+          </div>
+
+          <div class="connector-band">
+            <div class="conn-branch conn-yellow">▼</div>
+            <div class="conn-branch conn-red">▼</div>
+            <div class="conn-branch conn-green">▼</div>
+          </div>
+
+          <div class="three-roles-overview">
+            <div class="role-column role-energy" id="roleCol-energy">
+              <div class="role-header">⚡ 主にエネルギーになる</div>
+              <div class="role-tags">
+                <span class="tag-pill">炭水化物</span>
+                <span class="tag-pill">脂質</span>
+                <span class="tag-pill tag-sub">＋たんぱく質*</span>
+              </div>
+              <div class="role-visual-row">
+                <span>🏃 体を動かす</span>
+                <span>🌡️ 体温を約36℃に保つ</span>
+              </div>
+            </div>
+
+            <div class="role-column role-bodybuild" id="roleCol-body">
+              <div class="role-header">💪 主に体をつくる</div>
+              <div class="role-tags">
+                <span class="tag-pill">たんぱく質</span>
+                <span class="tag-pill">無機質（カルシウム）</span>
+              </div>
+              <div class="role-visual-row">
+                <span>💪 筋肉・血液・髪・つめ</span>
+                <span>🦴 骨や歯をじょうぶに</span>
+              </div>
+            </div>
+
+            <div class="role-column role-condition" id="roleCol-condition">
+              <div class="role-header">✨ 主に体の調子を整える</div>
+              <div class="role-tags">
+                <span class="tag-pill">無機質</span>
+                <span class="tag-pill">ビタミン</span>
+              </div>
+              <div class="role-visual-row">
+                <span>🤝 他の栄養素を助ける</span>
+                <span>🛡️ 病気予防・傷の回復</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="nutrient-spotlight" id="nutrientSpotlight"></div>
+        </div>
+
+        <div class="two-col-grid">
+          <div class="card-box">
+            <h3>👄 食べ物のゆくえ</h3>
+            <div class="digestion-flow">
+              <button class="digest-step active" onclick="showDigestInfo(0)">① かむ</button>
+              <span class="digest-arrow">▶</span>
+              <button class="digest-step" onclick="showDigestInfo(1)">② 消化</button>
+              <span class="digest-arrow">▶</span>
+              <button class="digest-step" onclick="showDigestInfo(2)">③ 吸収</button>
+              <span class="digest-arrow">▶</span>
+              <button class="digest-step" onclick="showDigestInfo(3)">④ 働く・はいせつ</button>
+            </div>
+            <div class="digest-detail" id="digestDetailBox"></div>
+          </div>
+
+          <div class="card-box">
+            <h3>📊 食品の成分割合</h3>
+            <div class="food-chart-tabs">
+              <button class="chart-tab active" onclick="renderFoodPie('raw-rice')">米(白米)</button>
+              <button class="chart-tab" onclick="renderFoodPie('cooked-rice')">ご飯</button>
+              <button class="chart-tab" onclick="renderFoodPie('bread')">食パン</button>
+              <button class="chart-tab" onclick="renderFoodPie('soy')">大豆(ゆで)</button>
+              <button class="chart-tab" onclick="renderFoodPie('spinach')">ほうれんそう</button>
+            </div>
+            <div class="food-chart-display" id="foodChartDisplay"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="nutri-menu" class="sub-panel">
+        <div class="two-col-grid">
+          <div class="card-box">
+            <div class="section-head">
+              <h3>🏫 給食の食品仕分け</h3>
+              <div>
+                <button class="secondary-btn btn-sm" onclick="autoFillSchoolLunch()">お手本</button>
+                <button class="secondary-btn btn-sm" onclick="resetSchoolLunch()">↺</button>
+              </div>
+            </div>
+            <div class="lunch-chip-pool" id="lunchChipPool"></div>
+            <div class="lunch-group-boxes">
+              <div class="lunch-group-col col-yellow">
+                <h4>🟡 エネルギー</h4>
+                <div class="lunch-drop-list" id="lunchList-energy"></div>
+              </div>
+              <div class="lunch-group-col col-red">
+                <h4>🔴 体をつくる</h4>
+                <div class="lunch-drop-list" id="lunchList-body"></div>
+              </div>
+              <div class="lunch-group-col col-green">
+                <h4>🟢 調子を整える</h4>
+                <div class="lunch-drop-list" id="lunchList-condition"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-box">
+            <h3>🍲 定食バランスメーカー</h3>
+            <div class="meal-builder">
+              <div class="builder-row">
+                <span class="builder-tag">主食</span>
+                <span class="fixed-chip">🍚 ご飯（🟡米）</span>
+              </div>
+              <div class="builder-row">
+                <span class="builder-tag">みそしるの実<br /><small>(🔴みそ・だし)</small></span>
+                <div class="ingredient-picker" id="customMisoPicker"></div>
+              </div>
+              <div class="builder-row">
+                <span class="builder-tag">おかず・他</span>
+                <div class="ingredient-picker" id="customSidePicker"></div>
+              </div>
+              <div class="balance-meter-box" id="balanceMeterBox"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 🏆 総合クイズ ==================== -->
+    <section id="tab-quiz" class="tab-panel">
+      <div class="quiz-container" id="quizContainer"></div>
+    </section>
+  </main>
+
+  <!-- グループ選択モーダル -->
+  <div id="groupSelectModal" class="modal-overlay hidden" onclick="closeGroupModal()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <h3 id="modalFoodTitle"></h3>
+      <div class="modal-btn-stack">
+        <button class="basket-btn basket-yellow" onclick="submitLunchChipGroup('energy')">
+          🟡 主にエネルギーのもと（炭水化物・脂質）
+        </button>
+        <button class="basket-btn basket-red" onclick="submitLunchChipGroup('body')">
+          🔴 主に体をつくるもと（たんぱく質・無機質）
+        </button>
+        <button class="basket-btn basket-green" onclick="submitLunchChipGroup('condition')">
+          🟢 主に体の調子を整えるもと（ビタミン・無機質）
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
